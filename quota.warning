@@ -1,0 +1,47 @@
+#!/usr/bin/php
+<?
+
+/*
+Author: Jorge Giunta
+Mail: jorge@giunta.com.ar
+Under GPL License
+
+This script check de availability of mail account, if this is bigger than 90%, send mail alerting the user.
+
+ */
+
+function send_mail($to,$quota) {
+	$body = "\r\nEstimado usuario:\r\n";
+	$body .= "\r\nUsted en este momento esta utilizando $quota de su capacidad total.\r\n";
+	$body .= "\r\nPor favor, si esta cerca del limite o lo ha excedido, haga una copia de sus correos y borre luego los que crea convenientes, ";
+	$body .= " para asegurarse que su casilla siga funcional.\r\n";
+	$body .= "\r\nDispone de un tutorial en http://www.exmaple.com/quota\r\n";
+	$body .= "\r\nIMPORTANTE: Debe eliminar mensajes desde el webmail, si lo hace desde su cliente de correo (Outlook Express, Thunderbird, etc.) no tendra ningun efecto y su casilla seguira con el mismo espacio utilizado.\r\n";
+	$body .= "\r\nCualquier consulta puede hacerla a info@example.com\r\n";
+	$body .= "\r\nAtte. Direccion de Tecnologia de la Informacion";
+
+	$headers = "From: Dir. Tecnologia de la Informacion <info@example.com>\r\n";
+	$headers .= "MIME-Version: 1.0\r\n";
+	$headers .= "Content-Type: text/plain; charset=ISO-8859-1\r\n";
+
+	echo "\nSending mail to $to because have $quota used.";
+	mail("$to","Comunicado de la Direccion de Tecnologia de la Informacion", $body);
+}
+
+$domain = "@example.com";
+
+$file = fopen("/var/lib/vpopmail/domains/example.com/vpasswd", "r");
+while (!feof($file)) {
+	$fbuffer = fgets($file, 4096);
+	$fexplotado = explode(":",$fbuffer);
+	$login = trim($fexplotado[0]);
+	$quota = exec("/var/lib/vpopmail/bin/vuserinfo -Q $login");
+	$quota2 = substr ($quota, 0, strlen($quota) - 1);
+	if($quota2 >= 90) { # Maximum percent of quota
+				send_mail($login.$domain,$quota);
+	echo "$login\n";
+	}
+}
+fclose($file);
+?>
+
